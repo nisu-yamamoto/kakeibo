@@ -4,7 +4,16 @@
   <meta charset="UTF-8">
   <!-- スマホの画面幅に合わせて表示するための設定 -->
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>家計ブレーキ</title>
+  <title>食費カウンター</title>
+
+  <!-- 起動した瞬間に白く光らないよう、CSSを読み込む前から背景色を決めておく -->
+  <meta name="color-scheme" content="light dark">
+  <style>
+    html { background: #f5f4f0; }
+    @media (prefers-color-scheme: dark) {
+      html { background: #1a1a19; }
+    }
+  </style>
 
   <!-- ホーム画面に「アプリ」として追加するための設定 -->
   <link rel="manifest" href="manifest.webmanifest">
@@ -114,6 +123,16 @@
         <button type="submit" class="primary">記録する</button>
       </div>
     </form>
+  </dialog>
+
+  <!-- 確認画面（削除やバックアップ読み込みの前に出す） -->
+  <dialog id="confirm-dialog">
+    <p class="dialog-title" id="confirm-title"></p>
+    <p class="confirm-message" id="confirm-message"></p>
+    <div class="dialog-buttons">
+      <button type="button" id="confirm-cancel">キャンセル</button>
+      <button type="button" class="primary" id="confirm-ok">OK</button>
+    </div>
   </dialog>
 
   <!-- 画面下のナビ。href の「#history」などで画面を切り替える -->

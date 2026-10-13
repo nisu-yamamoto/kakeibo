@@ -1,5 +1,5 @@
 /* =========================================================
-   家計ブレーキ 見た目（CSS）
+   食費カウンター 見た目（CSS）
    ========================================================= */
 
 /* ---- 色の定義：ここを変えると全体の色が変わる ---- */
@@ -541,6 +541,20 @@ dialog input {
   background: var(--text);
   border-color: var(--text);
   color: var(--card);
+}
+
+.dialog-buttons .primary.danger {
+  background: var(--danger);       /* 削除など、取り返しのつかない操作は赤 */
+  border-color: var(--danger);
+}
+
+.dialog-buttons button[hidden] { display: none; }
+
+.confirm-message {
+  margin: 0 0 8px;
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-line;           /* 「\n」で改行できるようにする */
 }
 
 /* =========================================================

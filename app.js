@@ -1,5 +1,5 @@
 // =========================================================
-// 家計ブレーキ アプリ本体（JavaScript）
+// 食費カウンター アプリ本体（JavaScript）
 //
 //   1. 初期設定
 //   2. データの保存と読み込み
@@ -8,6 +8,7 @@
 //   5. ホーム画面
 //   6. 記録する・取り消す・トースト
 //   7. 金額入力ダイアログ
+//   7.5 確認画面（ブラウザ標準の確認窓の代わり）
 //   8. 履歴画面
 //   9. 振り返り画面
 //  10. 設定画面（予算・ボタン・バックアップ）
@@ -47,7 +48,7 @@ function saveJSON(key, value) {
     localStorage.setItem(key, JSON.stringify(value));
     return true;
   } catch (e) {
-    alert('保存に失敗しました');
+    showMessage('保存できませんでした', 'スマホの空き容量などを確認してください。');
     return false;
   }
 }
@@ -327,6 +328,52 @@ document.getElementById('dialog-cancel').addEventListener('click', () => {
 });
 
 
+// ---------- 7.5 確認画面 ----------
+// ブラウザ標準の confirm() / alert() は見出しにサイトのアドレスが出てしまい、
+// 文言も変えられないため、アプリ独自の確認画面を使う。
+// 使い方：askConfirm({ title, message }).then(ok => { if (ok) { … } });
+const confirmDialog = document.getElementById('confirm-dialog');
+const confirmOk = document.getElementById('confirm-ok');
+const confirmCancel = document.getElementById('confirm-cancel');
+let confirmResolve = null;
+
+function askConfirm({ title, message, okLabel = 'OK', cancelLabel = 'キャンセル', danger = false }) {
+  return new Promise(resolve => {
+    document.getElementById('confirm-title').textContent = title;
+    document.getElementById('confirm-message').textContent = message;
+    confirmOk.textContent = okLabel;
+    confirmOk.classList.toggle('danger', danger);
+    confirmCancel.textContent = cancelLabel || '';
+    confirmCancel.hidden = !cancelLabel;      // お知らせだけのときは「キャンセル」を出さない
+    confirmResolve = resolve;
+    confirmDialog.showModal();
+  });
+}
+
+// お知らせだけ出す（ボタンは「OK」のみ）
+function showMessage(title, message) {
+  return askConfirm({ title, message, cancelLabel: null });
+}
+
+function closeConfirm(result) {
+  if (confirmDialog.open) confirmDialog.close();
+  if (confirmResolve) {
+    const resolve = confirmResolve;
+    confirmResolve = null;
+    resolve(result);
+  }
+}
+
+confirmOk.addEventListener('click', () => closeConfirm(true));
+confirmCancel.addEventListener('click', () => closeConfirm(false));
+
+// スマホの「戻る」で閉じたときは「キャンセル」扱い
+confirmDialog.addEventListener('cancel', (event) => {
+  event.preventDefault();
+  closeConfirm(false);
+});
+
+
 // ---------- 8. 履歴画面 ----------
 let historyWeekStart = getWeekStart(new Date());
 
@@ -380,12 +427,17 @@ function renderHistory() {
       <span class="tag">${name}</span>
       <span class="record-amount">${yen(r.amount)}</span>
       <button class="record-delete" aria-label="この記録を削除">🗑️</button>`;
-    li.querySelector('.record-delete').addEventListener('click', () => {
-      if (confirm(`${day} ${formatTime(t)} ${name} ${yen(r.amount)}\nこの記録を削除しますか？`)) {
-        removeRecord(r.id);
-        renderHistory();
-        showToast('削除しました');
-      }
+    li.querySelector('.record-delete').addEventListener('click', async () => {
+      const ok = await askConfirm({
+        title: '履歴の削除確認',
+        message: `${day} ${formatTime(t)}　${name} ${yen(r.amount)}\nこの記録を削除しますか？`,
+        okLabel: '削除する',
+        danger: true,
+      });
+      if (!ok) return;
+      removeRecord(r.id);
+      renderHistory();
+      showToast('削除しました');
     });
     ul.appendChild(li);
   }
@@ -670,11 +722,11 @@ importFile.addEventListener('change', async () => {
   try {
     data = JSON.parse(await file.text());
   } catch (e) {
-    alert('このファイルは読み込めませんでした');
+    showMessage('読み込めませんでした', 'このファイルは読み込めませんでした。');
     return;
   }
   if (!data || !Array.isArray(data.records)) {
-    alert('家計ブレーキのバックアップファイルではないようです');
+    showMessage('読み込めませんでした', 'このアプリのバックアップファイルではないようです。');
     return;
   }
 
@@ -686,9 +738,13 @@ importFile.addEventListener('change', async () => {
       && !isNaN(new Date(r.time).getTime())
   );
 
-  if (!confirm(`${valid.length}件の記録を読み込みます。\n今このスマホにある記録は置き換わります。よろしいですか？`)) {
-    return;
-  }
+  const ok = await askConfirm({
+    title: 'バックアップの読み込み確認',
+    message: `${valid.length}件の記録を読み込みます。\n今このスマホにある記録は置き換わります。よろしいですか？`,
+    okLabel: '読み込む',
+    danger: true,
+  });
+  if (!ok) return;
 
   records = valid;
   saveRecords();
