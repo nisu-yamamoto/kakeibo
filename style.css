@@ -1,0 +1,611 @@
+/* =========================================================
+   家計ブレーキ 見た目（CSS）
+   ========================================================= */
+
+/* ---- 色の定義：ここを変えると全体の色が変わる ---- */
+:root {
+  --bg: #f5f4f0;          /* 画面の背景 */
+  --card: #ffffff;        /* カードの背景 */
+  --text: #1f1f1d;        /* 文字 */
+  --sub: #6b6a66;         /* 補足の文字 */
+  --line: #e3e1db;        /* 枠線 */
+  --track: #ecebe6;       /* バーの土台 */
+  --danger: #a32d2d;      /* 予算オーバーの色 */
+  --danger-bg: #fcebeb;
+  --good: #3b6d11;        /* 達成の色 */
+  --good-bg: #eaf3de;
+
+  --gaishoku: #0f7a63;    /* 外食の色 */
+  --gaishoku-bg: #e1f5ee;
+  --shokuhi: #3b6d11;     /* 食費の色 */
+  --shokuhi-bg: #eaf3de;
+  --rouhi: #b5541f;       /* 浪費の色 */
+  --rouhi-bg: #faece7;
+}
+
+/* ---- スマホがダークモードのときの色 ---- */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1a1a19;
+    --card: #262624;
+    --text: #f1efe8;
+    --sub: #a8a69f;
+    --line: #3a3a37;
+    --track: #3a3a37;
+    --danger: #f09595;
+    --danger-bg: #4a1b1b;
+    --good: #97c459;
+    --good-bg: #27390f;
+
+    --gaishoku: #5dcaa5;
+    --gaishoku-bg: #0f3b30;
+    --shokuhi: #97c459;
+    --shokuhi-bg: #27390f;
+    --rouhi: #f0997b;
+    --rouhi-bg: #4a1f10;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif;
+}
+
+main {
+  max-width: 480px;            /* PCで見ても横に広がりすぎないように */
+  margin: 0 auto;
+  padding: 16px 16px 96px;     /* 下は固定ナビの分だけ空ける */
+}
+
+/* 表示していない画面は隠す */
+.view[hidden] { display: none; }
+
+button { font-family: inherit; }
+
+.week {
+  font-size: 13px;
+  color: var(--sub);
+  margin: 4px 0 12px;
+}
+
+/* =========================================================
+   ホーム画面
+   ========================================================= */
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px 16px 14px;
+  margin-bottom: 10px;
+}
+
+.card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.tag {
+  font-size: 13px;
+  padding: 2px 10px;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+
+.count {
+  font-size: 13px;
+  color: var(--sub);
+}
+
+.amount-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: 6px;
+}
+
+.remain-label {
+  font-size: 13px;
+  color: var(--sub);
+  margin-right: 6px;
+}
+
+.remain {
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.used {
+  font-size: 12px;
+  color: var(--sub);
+}
+
+/* 予算オーバーしたカードは残額を赤くする */
+.card.over .remain,
+.card.over .remain-label {
+  color: var(--danger);
+}
+
+/* 使った割合のバー */
+.bar {
+  height: 6px;
+  background: var(--track);
+  border-radius: 3px;
+  margin: 8px 0 10px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: 3px;
+}
+
+/* 入力ボタン（多いときは2段に折り返す） */
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.buttons button {
+  flex: 1 0 64px;          /* 横幅を均等に分ける */
+  height: 48px;            /* 指で押しやすい高さ */
+  font-size: 15px;
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.buttons button:active {
+  background: var(--track);  /* 押した瞬間だけ色が変わる */
+}
+
+.buttons .input-btn {
+  flex: 0 0 56px;          /* 鉛筆ボタンは幅固定 */
+}
+
+/* カテゴリごとの色の割り当て */
+.gaishoku .tag      { background: var(--gaishoku-bg); color: var(--gaishoku); }
+.gaishoku .bar-fill { background: var(--gaishoku); }
+.shokuhi .tag       { background: var(--shokuhi-bg); color: var(--shokuhi); }
+.shokuhi .bar-fill  { background: var(--shokuhi); }
+.rouhi .tag         { background: var(--rouhi-bg); color: var(--rouhi); }
+.rouhi .bar-fill    { background: var(--rouhi); }
+
+/* =========================================================
+   履歴・振り返りで共通の部品
+   ========================================================= */
+
+/* 「‹ 期間 ›」の切り替え */
+.period-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 12px;
+}
+
+.period-nav span {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.period-nav button {
+  width: 44px;
+  height: 44px;
+  font-size: 22px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--text);
+}
+
+.period-nav button.invisible {
+  visibility: hidden;      /* 未来には進めないので隠す */
+}
+
+/* カテゴリ別の小さな集計ボックス（3つ並び） */
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.metric {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+.metric-main {
+  margin: 6px 0 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.metric-sub {
+  margin: 0;
+  font-size: 13px;
+  color: var(--sub);
+}
+
+.section-title {
+  margin: 18px 0 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--sub);
+}
+
+.note {
+  margin: 0 0 4px;
+  font-size: 12px;
+  color: var(--sub);
+}
+
+.empty {
+  padding: 24px 0;
+  text-align: center;
+  font-size: 14px;
+  color: var(--sub);
+}
+
+/* =========================================================
+   履歴画面
+   ========================================================= */
+.record-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* 日付ごとの見出し行 */
+.day-head {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--track);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.day-head span:last-child {
+  font-weight: 400;
+  color: var(--sub);
+}
+
+.record {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 4px 4px 12px;
+  border-top: 1px solid var(--line);
+  font-size: 15px;
+}
+
+.record-time {
+  width: 44px;
+  font-size: 13px;
+  color: var(--sub);
+}
+
+.record-amount {
+  margin-left: auto;
+  font-weight: 600;
+}
+
+.record-delete {
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: transparent;
+  font-size: 17px;
+}
+
+/* =========================================================
+   振り返り画面
+   ========================================================= */
+.saved-box {
+  text-align: center;
+  padding: 16px;
+}
+
+.saved-label {
+  margin: 0;
+  font-size: 13px;
+  color: var(--sub);
+}
+
+.saved-amount {
+  margin: 4px 0;
+  font-size: 32px;
+  font-weight: 600;
+}
+
+.saved-amount.minus {
+  color: var(--danger);
+}
+
+.month-total {
+  margin: 0;
+  text-align: right;
+  font-size: 13px;
+  color: var(--sub);
+}
+
+.week-result-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.week-status {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--sub);
+}
+
+.result-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 14px;
+}
+
+.result-row .label {
+  width: 84px;
+  font-size: 13px;
+  color: var(--sub);
+}
+
+.result-row .value {
+  flex: 1;
+}
+
+.result-row.total {
+  margin-top: 4px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+  font-weight: 600;
+}
+
+.badge {
+  padding: 1px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.badge.ok      { background: var(--good-bg); color: var(--good); }
+.badge.over    { background: var(--danger-bg); color: var(--danger); }
+.badge.pending { color: var(--sub); }
+
+.minus-text { color: var(--danger); }
+
+/* =========================================================
+   設定画面
+   ========================================================= */
+.field {
+  display: block;
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--sub);
+}
+
+.field input,
+.preset-row input {
+  display: block;
+  width: 100%;
+  height: 44px;
+  margin-top: 4px;
+  padding: 0 12px;
+  font-size: 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.field-label {
+  margin: 12px 0 4px;
+  font-size: 13px;
+  color: var(--sub);
+}
+
+.preset-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.preset-row input {
+  flex: 1;
+  margin-top: 0;
+}
+
+.remove-preset {
+  flex: 0 0 64px;
+  height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--danger);
+  font-size: 14px;
+}
+
+.add-preset {
+  width: 100%;
+  height: 40px;
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--sub);
+  font-size: 14px;
+}
+
+.primary-btn {
+  display: block;
+  width: 100%;
+  height: 48px;
+  margin: 4px 0 8px;
+  border: none;
+  border-radius: 12px;
+  background: var(--text);
+  color: var(--card);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.sub-btn {
+  display: block;
+  width: 100%;
+  height: 44px;
+  margin-top: 8px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+  font-size: 15px;
+}
+
+.error {
+  min-height: 18px;
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--danger);
+}
+
+/* =========================================================
+   金額入力ダイアログ
+   ========================================================= */
+dialog {
+  width: min(320px, 90vw);
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--card);
+  color: var(--text);
+}
+
+dialog::backdrop {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.dialog-title {
+  margin: 0 0 12px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+dialog input {
+  width: 100%;
+  height: 48px;
+  padding: 0 12px;
+  font-size: 20px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.dialog-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.dialog-buttons button {
+  flex: 1;
+  height: 44px;
+  font-size: 15px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+}
+
+.dialog-buttons .primary {
+  background: var(--text);
+  border-color: var(--text);
+  color: var(--card);
+}
+
+/* =========================================================
+   トースト（画面下に数秒だけ出るお知らせ）
+   ========================================================= */
+.toast {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: calc(80px + env(safe-area-inset-bottom));
+  max-width: 448px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 44px;
+  padding: 6px 14px;
+  border-radius: 10px;
+  background: var(--text);
+  color: var(--card);
+  font-size: 14px;
+}
+
+.toast[hidden] { display: none; }
+
+.toast button {
+  padding: 4px 8px;
+  border: none;
+  background: transparent;
+  color: var(--card);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.toast button[hidden] { display: none; }
+
+/* =========================================================
+   画面下のナビ（常に下に固定）
+   ========================================================= */
+nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  background: var(--card);
+  border-top: 1px solid var(--line);
+  padding: 8px 0 calc(10px + env(safe-area-inset-bottom));
+}
+
+nav a {
+  text-align: center;
+  font-size: 12px;
+  color: var(--sub);
+  text-decoration: none;
+}
+
+nav a.active {
+  color: var(--text);
+  font-weight: 600;
+}
+
+nav .icon {
+  display: block;
+  font-size: 20px;
+}

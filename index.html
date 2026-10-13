@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>家計ブレーキ</title>
 
-  <!-- ホーム画面に「アプリ」として追加するための設定（ステップ3で追加） -->
+  <!-- ホーム画面に「アプリ」として追加するための設定 -->
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon-192.png">
   <link rel="apple-touch-icon" href="icon-192.png">
@@ -14,301 +14,72 @@
   <meta name="theme-color" content="#f5f4f0" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#1a1a19" media="(prefers-color-scheme: dark)">
 
-  <!-- ===================== CSS（見た目） ===================== -->
-  <style>
-    /* ---- 色の定義：ここを変えると全体の色が変わる ---- */
-    :root {
-      --bg: #f5f4f0;          /* 画面の背景 */
-      --card: #ffffff;        /* カードの背景 */
-      --text: #1f1f1d;        /* 文字 */
-      --sub: #6b6a66;         /* 補足の文字 */
-      --line: #e3e1db;        /* 枠線 */
-      --track: #ecebe6;       /* バーの土台 */
-      --danger: #a32d2d;      /* 予算オーバーの色 */
-
-      --gaishoku: #0f7a63;    /* 外食の色 */
-      --gaishoku-bg: #e1f5ee;
-      --shokuhi: #3b6d11;     /* 食費の色 */
-      --shokuhi-bg: #eaf3de;
-      --rouhi: #b5541f;       /* 浪費の色 */
-      --rouhi-bg: #faece7;
-    }
-
-    /* ---- スマホがダークモードのときの色 ---- */
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #1a1a19;
-        --card: #262624;
-        --text: #f1efe8;
-        --sub: #a8a69f;
-        --line: #3a3a37;
-        --track: #3a3a37;
-        --danger: #f09595;
-
-        --gaishoku: #5dcaa5;
-        --gaishoku-bg: #0f3b30;
-        --shokuhi: #97c459;
-        --shokuhi-bg: #27390f;
-        --rouhi: #f0997b;
-        --rouhi-bg: #4a1f10;
-      }
-    }
-
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--text);
-      font-family: system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif;
-    }
-
-    main {
-      max-width: 480px;            /* PCで見ても横に広がりすぎないように */
-      margin: 0 auto;
-      padding: 16px 16px 96px;     /* 下は固定ナビの分だけ空ける */
-    }
-
-    .week {
-      font-size: 13px;
-      color: var(--sub);
-      margin: 4px 0 12px;
-    }
-
-    /* ---- カード ---- */
-    .card {
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      padding: 12px 16px 14px;
-      margin-bottom: 10px;
-    }
-
-    .card-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .tag {
-      font-size: 13px;
-      padding: 2px 10px;
-      border-radius: 8px;
-    }
-
-    .count {
-      font-size: 13px;
-      color: var(--sub);
-    }
-
-    .amount-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      margin-top: 6px;
-    }
-
-    .remain-label {
-      font-size: 13px;
-      color: var(--sub);
-      margin-right: 6px;
-    }
-
-    .remain {
-      font-size: 28px;
-      font-weight: 600;
-    }
-
-    .used {
-      font-size: 12px;
-      color: var(--sub);
-    }
-
-    /* 予算オーバーしたカードは残額を赤くする */
-    .card.over .remain,
-    .card.over .remain-label {
-      color: var(--danger);
-    }
-
-    /* ---- 使った割合のバー ---- */
-    .bar {
-      height: 6px;
-      background: var(--track);
-      border-radius: 3px;
-      margin: 8px 0 10px;
-      overflow: hidden;
-    }
-
-    .bar-fill {
-      height: 100%;
-      border-radius: 3px;
-    }
-
-    /* ---- 入力ボタン ---- */
-    .buttons {
-      display: flex;
-      gap: 8px;
-    }
-
-    .buttons button {
-      flex: 1;                 /* 横幅を均等に分ける */
-      height: 48px;            /* 指で押しやすい高さ */
-      font-size: 15px;
-      background: transparent;
-      color: var(--text);
-      border: 1px solid var(--line);
-      border-radius: 10px;
-    }
-
-    .buttons button:active {
-      background: var(--track);  /* 押した瞬間だけ色が変わる */
-    }
-
-    .buttons .input-btn {
-      flex: 0 0 56px;          /* 鉛筆ボタンは幅固定 */
-    }
-
-    /* ---- カテゴリごとの色の割り当て ---- */
-    .gaishoku .tag      { background: var(--gaishoku-bg); color: var(--gaishoku); }
-    .gaishoku .bar-fill { background: var(--gaishoku); }
-    .shokuhi .tag       { background: var(--shokuhi-bg); color: var(--shokuhi); }
-    .shokuhi .bar-fill  { background: var(--shokuhi); }
-    .rouhi .tag         { background: var(--rouhi-bg); color: var(--rouhi); }
-    .rouhi .bar-fill    { background: var(--rouhi); }
-
-    /* ---- 金額入力ダイアログ ---- */
-    dialog {
-      width: min(320px, 90vw);
-      padding: 20px;
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      background: var(--card);
-      color: var(--text);
-    }
-
-    dialog::backdrop {
-      background: rgba(0, 0, 0, 0.4);
-    }
-
-    .dialog-title {
-      margin: 0 0 12px;
-      font-size: 16px;
-      font-weight: 600;
-    }
-
-    dialog input {
-      width: 100%;
-      height: 48px;
-      padding: 0 12px;
-      font-size: 20px;
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      background: var(--bg);
-      color: var(--text);
-    }
-
-    .error {
-      min-height: 18px;
-      margin: 6px 0 0;
-      font-size: 13px;
-      color: var(--danger);
-    }
-
-    .dialog-buttons {
-      display: flex;
-      gap: 8px;
-      margin-top: 8px;
-    }
-
-    .dialog-buttons button {
-      flex: 1;
-      height: 44px;
-      font-size: 15px;
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      background: transparent;
-      color: var(--text);
-    }
-
-    .dialog-buttons .primary {
-      background: var(--text);
-      border-color: var(--text);
-      color: var(--card);
-    }
-
-    /* ---- 取り消しトースト（記録直後に5秒だけ出る） ---- */
-    .toast {
-      position: fixed;
-      left: 16px;
-      right: 16px;
-      bottom: calc(80px + env(safe-area-inset-bottom));
-      max-width: 448px;
-      margin: 0 auto;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 14px;
-      border-radius: 10px;
-      background: var(--text);
-      color: var(--card);
-      font-size: 14px;
-    }
-
-    .toast[hidden] {
-      display: none;
-    }
-
-    .toast button {
-      padding: 4px 8px;
-      border: none;
-      background: transparent;
-      color: var(--card);
-      font-size: 14px;
-      font-weight: 600;
-      text-decoration: underline;
-    }
-
-    /* ---- 画面下のナビ（常に下に固定） ---- */
-    nav {
-      position: fixed;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      background: var(--card);
-      border-top: 1px solid var(--line);
-      padding: 8px 0 calc(10px + env(safe-area-inset-bottom));
-    }
-
-    nav a {
-      text-align: center;
-      font-size: 12px;
-      color: var(--sub);
-      text-decoration: none;
-    }
-
-    nav a.active {
-      color: var(--text);
-      font-weight: 600;
-    }
-
-    nav .icon {
-      display: block;
-      font-size: 20px;
-    }
-  </style>
+  <!-- 見た目は style.css に書いてある -->
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-  <!-- ===================== HTML（中身） ===================== -->
   <main>
-    <p class="week" id="week"></p>
-    <!-- カードはJavaScriptがここに並べる -->
-    <div id="cards"></div>
+    <!-- ===================== ホーム ===================== -->
+    <section id="view-home" class="view">
+      <p class="week" id="home-week"></p>
+      <!-- カードは app.js がここに並べる -->
+      <div id="home-cards"></div>
+    </section>
+
+    <!-- ===================== 履歴 ===================== -->
+    <section id="view-history" class="view" hidden>
+      <div class="period-nav">
+        <button id="history-prev" aria-label="前の週">‹</button>
+        <span id="history-week"></span>
+        <button id="history-next" aria-label="次の週">›</button>
+      </div>
+      <div class="metrics" id="history-summary"></div>
+      <p class="empty" id="history-empty" hidden>この週の記録はありません</p>
+      <ul class="record-list" id="history-list"></ul>
+    </section>
+
+    <!-- ===================== 振り返り ===================== -->
+    <section id="view-review" class="view" hidden>
+      <div class="period-nav">
+        <button id="review-prev" aria-label="前の月">‹</button>
+        <span id="review-month"></span>
+        <button id="review-next" aria-label="次の月">›</button>
+      </div>
+
+      <section class="card saved-box">
+        <p class="saved-label">今月浮いた額（預金に回す目安）</p>
+        <p class="saved-amount" id="review-saved"></p>
+        <p class="note" id="review-saved-note"></p>
+      </section>
+
+      <h2 class="section-title">今月使った額</h2>
+      <div class="metrics" id="review-summary"></div>
+      <p class="month-total" id="review-total"></p>
+
+      <h2 class="section-title">週ごとの結果</h2>
+      <p class="note">月曜日がこの月に入っている週を表示しています</p>
+      <div id="review-weeks"></div>
+    </section>
+
+    <!-- ===================== 設定 ===================== -->
+    <section id="view-settings" class="view" hidden>
+      <div id="settings-categories"></div>
+      <p class="error" id="settings-error"></p>
+      <button id="settings-save" class="primary-btn">設定を保存</button>
+
+      <section class="card">
+        <h2 class="section-title" style="margin-top: 4px;">バックアップ</h2>
+        <p class="note">記録はこのスマホの中にだけ保存されています。週に1回くらい書き出しておくと安心です。</p>
+        <p class="note" id="backup-info"></p>
+        <button id="export-btn" class="sub-btn">バックアップを書き出す</button>
+        <button id="import-btn" class="sub-btn">バックアップを読み込む</button>
+        <input type="file" id="import-file" accept="application/json,.json" hidden>
+      </section>
+    </section>
   </main>
 
-  <!-- カード1枚分の「型」。JavaScriptがこれをコピーして中身を埋める -->
+  <!-- カード1枚分の「型」。app.js がこれをコピーして中身を埋める -->
   <template id="card-template">
     <section class="card">
       <div class="card-head">
@@ -326,7 +97,7 @@
     </section>
   </template>
 
-  <!-- 取り消しトースト -->
+  <!-- お知らせ（記録した直後は「取り消す」付き） -->
   <div id="toast" class="toast" hidden>
     <span id="toast-text"></span>
     <button id="toast-undo">取り消す</button>
@@ -345,229 +116,15 @@
     </form>
   </dialog>
 
-  <!-- 画面下のナビ（今はホーム以外まだ動かない） -->
+  <!-- 画面下のナビ。href の「#history」などで画面を切り替える -->
   <nav>
-    <a href="#" class="active"><span class="icon">🏠</span>ホーム</a>
-    <a href="#"><span class="icon">📋</span>履歴</a>
-    <a href="#"><span class="icon">📊</span>振り返り</a>
-    <a href="#"><span class="icon">⚙️</span>設定</a>
+    <a href="#home"><span class="icon">🏠</span>ホーム</a>
+    <a href="#history"><span class="icon">📋</span>履歴</a>
+    <a href="#review"><span class="icon">📊</span>振り返り</a>
+    <a href="#settings"><span class="icon">⚙️</span>設定</a>
   </nav>
 
-  <!-- ===================== JavaScript（動き） ===================== -->
-  <script>
-    // ---- カテゴリの設定（ステップ5で設定画面から変えられるようにする） ----
-    // budget = 週予算、presets = ワンタップボタンの金額
-    const CATEGORIES = [
-      { id: 'gaishoku', name: '外食', budget: 8000, presets: [1300] },
-      { id: 'shokuhi',  name: '食費', budget: 2000, presets: [] },
-      { id: 'rouhi',    name: '浪費', budget: 2500, presets: [150, 300, 500] },
-    ];
-
-    const STORAGE_KEY = 'kakeibo-records';
-
-    // ---- データの読み書き ----
-    // 記録は [{ id, category, amount, time }, ...] という配列で、ブラウザ内に保存する
-    function loadRecords() {
-      try {
-        const text = localStorage.getItem(STORAGE_KEY);
-        return text ? JSON.parse(text) : [];
-      } catch (e) {
-        return [];
-      }
-    }
-
-    function saveRecords(records) {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
-      } catch (e) {
-        alert('保存に失敗しました');
-      }
-    }
-
-    let records = loadRecords();
-
-    // ---- 日付まわり ----
-    // 「今週の月曜0時」を返す
-    function getWeekStart(date) {
-      const d = new Date(date);
-      d.setHours(0, 0, 0, 0);
-      const daysFromMonday = (d.getDay() + 6) % 7;  // 月=0, 火=1, …, 日=6
-      d.setDate(d.getDate() - daysFromMonday);
-      return d;
-    }
-
-    // 日付を「10/12（月）」の形にする
-    function formatDay(d) {
-      const weekday = ['日', '月', '火', '水', '木', '金', '土'][d.getDay()];
-      return `${d.getMonth() + 1}/${d.getDate()}（${weekday}）`;
-    }
-
-    // 数字を「¥1,300」の形にする
-    function yen(n) {
-      return '¥' + Math.round(n).toLocaleString('ja-JP');
-    }
-
-    // ---- 画面を描く（記録が変わるたびに呼ぶ） ----
-    function render() {
-      const weekStart = getWeekStart(new Date());
-      const weekEnd = new Date(weekStart);
-      weekEnd.setDate(weekEnd.getDate() + 7);      // 次の月曜0時
-      const sunday = new Date(weekEnd);
-      sunday.setDate(sunday.getDate() - 1);
-
-      document.getElementById('week').textContent =
-        `今週 ${formatDay(weekStart)}〜${formatDay(sunday)}`;
-
-      // 今週分の記録だけを取り出す
-      const thisWeek = records.filter(r => {
-        const t = new Date(r.time);
-        return t >= weekStart && t < weekEnd;
-      });
-
-      const cards = document.getElementById('cards');
-      cards.innerHTML = '';
-      const template = document.getElementById('card-template');
-
-      for (const cat of CATEGORIES) {
-        const mine = thisWeek.filter(r => r.category === cat.id);
-        const used = mine.reduce((sum, r) => sum + r.amount, 0);
-        const remain = cat.budget - used;
-
-        // 型をコピーして中身を埋める
-        const card = template.content.firstElementChild.cloneNode(true);
-        card.classList.add(cat.id);
-        card.querySelector('.tag').textContent = cat.name;
-        card.querySelector('.count').textContent = `今週 ${mine.length}回`;
-        card.querySelector('.used').textContent = `${yen(used)} / ${yen(cat.budget)}`;
-
-        if (remain >= 0) {
-          card.querySelector('.remain-label').textContent = '残り';
-          card.querySelector('.remain').textContent = yen(remain);
-        } else {
-          card.classList.add('over');
-          card.querySelector('.remain-label').textContent = 'オーバー';
-          card.querySelector('.remain').textContent = yen(-remain);
-        }
-
-        // バーの長さ（100%で止める）
-        const percent = cat.budget > 0 ? Math.min(used / cat.budget * 100, 100) : 0;
-        card.querySelector('.bar-fill').style.width = percent + '%';
-
-        // ワンタップボタンを作る
-        const buttons = card.querySelector('.buttons');
-        for (const amount of cat.presets) {
-          const button = document.createElement('button');
-          button.textContent = yen(amount);
-          button.addEventListener('click', () => addRecord(cat, amount));
-          buttons.appendChild(button);
-        }
-
-        // 鉛筆ボタン（ワンタップボタンが無いカテゴリは横いっぱいに）
-        const inputButton = document.createElement('button');
-        if (cat.presets.length > 0) {
-          inputButton.textContent = '✏️';
-          inputButton.className = 'input-btn';
-          inputButton.setAttribute('aria-label', '金額を入力');
-        } else {
-          inputButton.textContent = '✏️ 金額を入力';
-        }
-        inputButton.addEventListener('click', () => openInputDialog(cat));
-        buttons.appendChild(inputButton);
-
-        cards.appendChild(card);
-      }
-    }
-
-    // ---- 記録する・取り消す ----
-    function addRecord(cat, amount) {
-      const record = {
-        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-        category: cat.id,
-        amount: amount,
-        time: new Date().toISOString(),
-      };
-      records.push(record);
-      saveRecords(records);
-      render();
-      if (navigator.vibrate) navigator.vibrate(15);  // 押したら軽くブルッとする
-      showToast(`${cat.name} ${yen(amount)} を記録`, record.id);
-    }
-
-    function removeRecord(id) {
-      records = records.filter(r => r.id !== id);
-      saveRecords(records);
-      render();
-    }
-
-    // ---- 取り消しトースト ----
-    let toastTimer = null;
-    let lastRecordId = null;
-
-    function showToast(text, recordId) {
-      lastRecordId = recordId;
-      document.getElementById('toast-text').textContent = text;
-      document.getElementById('toast').hidden = false;
-      clearTimeout(toastTimer);
-      toastTimer = setTimeout(hideToast, 5000);    // 5秒で消える
-    }
-
-    function hideToast() {
-      document.getElementById('toast').hidden = true;
-      lastRecordId = null;
-    }
-
-    document.getElementById('toast-undo').addEventListener('click', () => {
-      if (lastRecordId) removeRecord(lastRecordId);
-      hideToast();
-    });
-
-    // ---- 金額入力ダイアログ ----
-    const dialog = document.getElementById('input-dialog');
-    const amountInput = document.getElementById('amount-input');
-    const dialogError = document.getElementById('dialog-error');
-    let dialogCategory = null;
-
-    function openInputDialog(cat) {
-      dialogCategory = cat;
-      document.getElementById('dialog-title').textContent = `${cat.name}の金額`;
-      amountInput.value = '';
-      dialogError.textContent = '';
-      dialog.showModal();
-      amountInput.focus();
-    }
-
-    document.getElementById('input-form').addEventListener('submit', (event) => {
-      event.preventDefault();                      // ページの再読み込みを止める
-      const amount = Number(amountInput.value);
-      if (!Number.isInteger(amount) || amount <= 0) {
-        dialogError.textContent = '1円以上の金額を入れてください';
-        return;
-      }
-      dialog.close();
-      addRecord(dialogCategory, amount);
-    });
-
-    amountInput.addEventListener('input', () => {
-      dialogError.textContent = '';
-    });
-
-    document.getElementById('dialog-cancel').addEventListener('click', () => {
-      dialog.close();
-    });
-
-    // アプリに戻ってきたら描き直す（開きっぱなしで週をまたいだときのため）
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') render();
-    });
-
-    // 最初に1回描く
-    render();
-
-    // サービスワーカーを登録（電波が悪くても開けるようにする。ステップ3で追加）
-    // PCでファイルを直接開いたときは登録できないが、それで問題ない
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js').catch(() => {});
-    }
-  </script>
+  <!-- 動きは app.js に書いてある -->
+  <script src="app.js"></script>
 </body>
 </html>

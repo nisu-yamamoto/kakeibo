@@ -6,12 +6,15 @@
 //   「1回開く → 閉じる → もう1回開く」で新しい版になります）
 // =========================================================
 
-const CACHE_NAME = 'kakeibo-v1';
+// ファイル構成を変えたら、この番号を上げる
+const CACHE_NAME = 'kakeibo-v2';
 
 // 最初に保存しておくファイル
 const FILES = [
   './',
   './index.html',
+  './style.css',
+  './app.js',
   './manifest.webmanifest',
   './icon-192.png',
   './icon-512.png',
@@ -24,8 +27,15 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
+// 古い番号の保存データを片付ける
 self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    caches.keys()
+      .then((names) => Promise.all(
+        names.filter((name) => name !== CACHE_NAME).map((name) => caches.delete(name))
+      ))
+      .then(() => self.clients.claim())
+  );
 });
 
 self.addEventListener('fetch', (event) => {
